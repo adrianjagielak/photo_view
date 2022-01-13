@@ -265,7 +265,10 @@ class PhotoViewCoreState extends State<PhotoViewCore>
 
   void animateOnScaleStateUpdate(double prevScale, double nextScale) {
     animateScale(prevScale, nextScale);
-    animatePosition(controller.position, Offset.zero);
+    if (nextScale < prevScale || lastTapOffset == null)
+      animatePosition(controller.position, Offset.zero);
+    else
+      animatePosition(controller.position, Offset(cachedScaleBoundaries.childSize.width * lastTapOffset!.dx, cachedScaleBoundaries.childSize.width * lastTapOffset!.dy));
     animateRotation(controller.rotation, 0.0);
   }
 
@@ -339,20 +342,34 @@ class PhotoViewCoreState extends State<PhotoViewCore>
               return child;
             }
 
-            return PhotoViewGestureDetector(
-              child: child,
-              onDoubleTap: nextScaleState,
-              onScaleStart: onScaleStart,
-              onScaleUpdate: onScaleUpdate,
-              onScaleEnd: onScaleEnd,
-              hitDetector: this,
-              onTapUp: widget.onTapUp != null
-                  ? (details) => widget.onTapUp!(context, details, value)
-                  : null,
-              onTapDown: widget.onTapDown != null
-                  ? (details) => widget.onTapDown!(context, details, value)
-                  : null,
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                return Listener(
+                  onPointerDown: (event) {
+                    // Clamp to offset between -1,-1 and 1,1
+                    lastTapOffset = Offset(
+                      ((-1 * event.localPosition.dx / constraints.maxWidth) + .5) * 2,
+                      ((-1 * event.localPosition.dy / constraints.maxHeight) + .5) * 2,
+                    );
+                  },
+                  child: PhotoViewGestureDetector(
+                    child: child,
+                    onDoubleTap: nextScaleState,
+                    onScaleStart: onScaleStart,
+                    onScaleUpdate: onScaleUpdate,
+                    onScaleEnd: onScaleEnd,
+                    hitDetector: this,
+                    onTapUp: widget.onTapUp != null
+                        ? (details) => widget.onTapUp!(context, details, value)
+                        : null,
+                    onTapDown: widget.onTapDown != null
+                        ? (details) => widget.onTapDown!(context, details, value)
+                        : null,
+                  ),
+                );
+              },
             );
+
           } else {
             return Container();
           }
@@ -434,3 +451,8 @@ class _CenterWithOriginalSizeDelegate extends SingleChildLayoutDelegate {
   int get hashCode =>
       subjectSize.hashCode ^ basePosition.hashCode ^ useImageScale.hashCode;
 }
+
+/// Last tap position used to zoom in on double tap to the specified location.
+///
+/// Inclusive between -1,-1 (bottom right) to 1,1 (top left).
+Offset? lastTapOffset;
