@@ -6,9 +6,9 @@ import 'package:photo_view/src/photo_view_scale_state.dart';
 
 /// Given a [PhotoViewScaleState], returns a scale value considering [scaleBoundaries].
 double getScaleForScaleState(
-  PhotoViewScaleState scaleState,
-  ScaleBoundaries scaleBoundaries,
-) {
+    PhotoViewScaleState scaleState,
+    ScaleBoundaries scaleBoundaries,
+    ) {
   switch (scaleState) {
     case PhotoViewScaleState.initial:
     case PhotoViewScaleState.zoomedIn:
@@ -16,12 +16,12 @@ double getScaleForScaleState(
       return _clampSize(scaleBoundaries.initialScale, scaleBoundaries);
     case PhotoViewScaleState.covering:
       return _clampSize(
-          _scaleForCovering(
+          _scaleForContained(
               scaleBoundaries.outerSize, scaleBoundaries.childSize),
           scaleBoundaries);
     case PhotoViewScaleState.originalSize:
       return _clampSize(1.0, scaleBoundaries);
-    // Will never be reached
+  // Will never be reached
     default:
       return 0;
   }
@@ -31,12 +31,12 @@ double getScaleForScaleState(
 /// Also, stores values regarding the two sizes: the container and teh child.
 class ScaleBoundaries {
   const ScaleBoundaries(
-    this._minScale,
-    this._maxScale,
-    this._initialScale,
-    this.outerSize,
-    this.childSize,
-  );
+      this._minScale,
+      this._maxScale,
+      this._initialScale,
+      this.outerSize,
+      this.childSize,
+      );
 
   final dynamic _minScale;
   final dynamic _maxScale;
@@ -62,14 +62,14 @@ class ScaleBoundaries {
     assert(_maxScale is double || _maxScale is PhotoViewComputedScale);
     if (_maxScale == PhotoViewComputedScale.contained) {
       return (_scaleForContained(outerSize, childSize) *
-              (_maxScale as PhotoViewComputedScale) // ignore: avoid_as
-                  .multiplier)
+          (_maxScale as PhotoViewComputedScale) // ignore: avoid_as
+              .multiplier)
           .clamp(minScale, double.infinity);
     }
     if (_maxScale == PhotoViewComputedScale.covered) {
       return (_scaleForCovering(outerSize, childSize) *
-              (_maxScale as PhotoViewComputedScale) // ignore: avoid_as
-                  .multiplier)
+          (_maxScale as PhotoViewComputedScale) // ignore: avoid_as
+              .multiplier)
           .clamp(minScale, double.infinity);
     }
     return _maxScale.clamp(minScale, double.infinity);
@@ -93,13 +93,13 @@ class ScaleBoundaries {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is ScaleBoundaries &&
-          runtimeType == other.runtimeType &&
-          _minScale == other._minScale &&
-          _maxScale == other._maxScale &&
-          _initialScale == other._initialScale &&
-          outerSize == other.outerSize &&
-          childSize == other.childSize;
+          other is ScaleBoundaries &&
+              runtimeType == other.runtimeType &&
+              _minScale == other._minScale &&
+              _maxScale == other._maxScale &&
+              _initialScale == other._initialScale &&
+              outerSize == other.outerSize &&
+              childSize == other.childSize;
 
   @override
   int get hashCode =>
